@@ -269,6 +269,12 @@ class Database {
         );
 
         if ($driver === 'mysql' && !empty($database_config['ssl_ca'])) {
+            $ssl_ca = $database_config['ssl_ca'];
+
+            if (!is_file($ssl_ca) || !is_readable($ssl_ca)) {
+                throw new PDOException("MySQL SSL CA certificate was not found or is not readable: {$ssl_ca}");
+            }
+
             $ssl_ca_option = defined('Pdo\\Mysql::ATTR_SSL_CA')
                 ? constant('Pdo\\Mysql::ATTR_SSL_CA')
                 : (defined('PDO::MYSQL_ATTR_SSL_CA') ? PDO::MYSQL_ATTR_SSL_CA : null);
@@ -277,7 +283,7 @@ class Database {
                 throw new PDOException('MySQL SSL support is unavailable in the current PHP installation.');
             }
 
-            $options[$ssl_ca_option] = $database_config['ssl_ca'];
+            $options[$ssl_ca_option] = $ssl_ca;
 
             if (defined('Pdo\\Mysql::ATTR_SSL_VERIFY_SERVER_CERT')) {
                 $options[constant('Pdo\\Mysql::ATTR_SSL_VERIFY_SERVER_CERT')] = true;
