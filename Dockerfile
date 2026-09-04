@@ -7,8 +7,7 @@ RUN docker-php-ext-install pdo pdo_mysql
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-# Allow Apache/PHP to read Render secret files
-RUN usermod -a -G 1000 www-data
+RUN groupadd -g 1000 rendersecret && usermod -a -G rendersecret www-data
 
 # Set LavaLust public folder as Apache document root
 RUN sed -ri 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/*.conf
