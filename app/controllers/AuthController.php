@@ -30,10 +30,10 @@ class AuthController extends Controller
         }
 
         $user_model = $this->call->model('UsersModel', 'users');
-        $user = $user_model->where('username', $identity)->get();
+        $user = $user_model->find_by('username', $identity);
 
         if (empty($user) && filter_var($identity, FILTER_VALIDATE_EMAIL)) {
-            $user = $user_model->where('email', $identity)->get();
+            $user = $user_model->find_by('email', $identity);
         }
 
         if (!empty($user) && password_verify($password, $user['password'] ?? '')) {
@@ -69,6 +69,7 @@ class AuthController extends Controller
         $user_model = $this->call->model('UsersModel', 'users');
 
         if ($user_model->exists(['username' => $username]) || $user_model->exists(['email' => $email])) {
+            $_SESSION['register_error'] = 'Username or email already exists.';
             redirect('register');
         }
 
@@ -81,12 +82,11 @@ class AuthController extends Controller
         ]);
 
         if ($user_id) {
-            $_SESSION['user_id'] = $user_id;
-            $_SESSION['username'] = $username;
-            $_SESSION['role'] = 'user';
-            redirect('users');
+            $_SESSION['register_success'] = 'Account created successfully.';
+            redirect('login');
         }
 
+        $_SESSION['register_error'] = 'Registration failed. Please try again.';
         redirect('register');
     }
 

@@ -12,11 +12,28 @@
         input { padding: 0.8rem; border-radius: 8px; border: 1px solid #333; background: #111; color: white; }
         button { background: #dd4814; color: white; border: none; padding: 0.9rem; border-radius: 8px; cursor: pointer; }
         a { color: #dd4814; }
+        .success {
+            background: #d1fae5;
+            color: #166534;
+            border: 1px solid #86efac;
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>Login</h1>
+
+        <?php if (isset($_SESSION['register_success'])): ?>
+            <div class="success">
+                <?= htmlspecialchars($_SESSION['register_success'], ENT_QUOTES, 'UTF-8') ?>
+            </div>
+            <?php unset($_SESSION['register_success']); ?>
+        <?php endif; ?>
+
         <form method="POST" action="/login">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>

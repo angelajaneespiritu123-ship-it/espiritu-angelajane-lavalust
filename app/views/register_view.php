@@ -17,6 +17,14 @@
 <body>
     <div class="card">
         <h1>Register</h1>
+
+        <?php if (isset($_SESSION['register_error'])): ?>
+            <p style="color: #ff8a8a; margin-bottom: 1rem;">
+                <?= htmlspecialchars($_SESSION['register_error'], ENT_QUOTES, 'UTF-8') ?>
+            </p>
+            <?php unset($_SESSION['register_error']); ?>
+        <?php endif; ?>
+
         <form method="POST" action="/register">
             <input type="text" name="username" placeholder="Username" required>
             <input type="email" name="email" placeholder="Email" required>
