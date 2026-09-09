@@ -40,7 +40,7 @@ class AuthController extends Controller
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'] ?? 'user';
-            redirect('users');
+            redirect('products');
         }
 
         redirect('login');
@@ -82,7 +82,6 @@ class AuthController extends Controller
         ]);
 
         if ($user_id) {
-            $_SESSION['register_success'] = 'Account created successfully.';
             redirect('login');
         }
 
