@@ -22,4 +22,11 @@ COPY . /var/www/html/
 RUN chown -R www-data:www-data /var/www/html \
 && chmod -R 755 /var/www/html
 
+# Add Render-compatible entrypoint
+COPY render-entrypoint.sh /usr/local/bin/render-entrypoint.sh
+RUN chmod +x /usr/local/bin/render-entrypoint.sh
+
+ENV PORT=80
 EXPOSE 80
+
+CMD ["/usr/local/bin/render-entrypoint.sh"]
