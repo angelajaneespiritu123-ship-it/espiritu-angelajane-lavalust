@@ -20,10 +20,30 @@ class AuthController extends Controller
             session_start();
         }
 
-        $_SESSION['user_id'] = 1;
-        $_SESSION['role'] = 'admin';
+        $this->call->library('database');
 
-        redirect('users');
+        $identity = trim($_POST['username'] ?? $_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+
+        if ($identity === '' || $password === '') {
+            redirect('login');
+        }
+
+        $user_model = $this->call->model('UsersModel', 'users');
+        $user = $user_model->where('username', $identity)->get();
+
+        if (empty($user) && filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+            $user = $user_model->where('email', $identity)->get();
+        }
+
+        if (!empty($user) && password_verify($password, $user['password'] ?? '')) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['role'] = $user['role'] ?? 'user';
+            redirect('users');
+        }
+
+        redirect('login');
     }
 
     public function store_register()
@@ -32,10 +52,42 @@ class AuthController extends Controller
             session_start();
         }
 
-        $_SESSION['user_id'] = 1;
-        $_SESSION['role'] = 'admin';
+        $this->call->library('database');
 
-        redirect('users');
+        $username = trim($_POST['username'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+
+        if ($username === '' || $email === '' || $password === '') {
+            redirect('register');
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            redirect('register');
+        }
+
+        $user_model = $this->call->model('UsersModel', 'users');
+
+        if ($user_model->exists(['username' => $username]) || $user_model->exists(['email' => $email])) {
+            redirect('register');
+        }
+
+        $user_id = $user_model->insert([
+            'username' => $username,
+            'email' => $email,
+            'password' => password_hash($password, PASSWORD_DEFAULT),
+            'role' => 'user',
+            'is_active' => 1,
+        ]);
+
+        if ($user_id) {
+            $_SESSION['user_id'] = $user_id;
+            $_SESSION['username'] = $username;
+            $_SESSION['role'] = 'user';
+            redirect('users');
+        }
+
+        redirect('register');
     }
 
     public function logout()
