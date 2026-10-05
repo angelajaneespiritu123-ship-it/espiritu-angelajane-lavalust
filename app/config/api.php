@@ -75,7 +75,7 @@ $config['refresh_token_expiration'] = 604800;
 | Used for Securing endpoint
 |
 */
-$config['jwt_secret'] = '33438f8e-5420-4b8d-867b-c107ddc4b8b9bd66bdb2-de54-42ce-8056-8d5c43738299';
+$config['jwt_secret'] = getenv('JWT_SECRET') ?: '';
 
 /*
 |--------------------------------------------------------------------------
@@ -85,7 +85,7 @@ $config['jwt_secret'] = '33438f8e-5420-4b8d-867b-c107ddc4b8b9bd66bdb2-de54-42ce-
 | Used for Securing endpoint
 |
 */
-$config['refresh_token_key'] = '0bNvxjPFJ6dhi1Ttf7AStp95zUcd1iy94mjblklwfPs';
+$config['refresh_token_key'] = getenv('REFRESH_TOKEN_KEY') ?: '';
 
 /*
 |--------------------------------------------------------------------------
