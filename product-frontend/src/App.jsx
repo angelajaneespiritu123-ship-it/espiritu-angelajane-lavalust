@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./InventoryDashboard.css";
 
 const configuredApiUrl = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
 const API_URL = import.meta.env.DEV
@@ -119,6 +120,8 @@ function App() {
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [stockFilter, setStockFilter] = useState("all");
 
   // ==========================================
   // PRODUCT FORM
@@ -496,6 +499,31 @@ function App() {
     }
   };
 
+  const totalUnits = products.reduce(
+    (total, product) => total + Number(product.quantity || 0),
+    0
+  );
+  const inventoryValue = products.reduce(
+    (total, product) => total + Number(product.price || 0) * Number(product.quantity || 0),
+    0
+  );
+  const lowStockCount = products.filter((product) => {
+    const quantityValue = Number(product.quantity || 0);
+    return quantityValue > 0 && quantityValue <= 5;
+  }).length;
+  const filteredProducts = products.filter((product) => {
+    const query = searchQuery.trim().toLowerCase();
+    const matchesQuery = !query ||
+      `${product.product_name || ""} ${product.description || ""}`.toLowerCase().includes(query);
+    const quantityValue = Number(product.quantity || 0);
+    const matchesStock = stockFilter === "all" ||
+      (stockFilter === "in-stock" && quantityValue > 5) ||
+      (stockFilter === "low-stock" && quantityValue > 0 && quantityValue <= 5) ||
+      (stockFilter === "out-of-stock" && quantityValue === 0);
+
+    return matchesQuery && matchesStock;
+  });
+
   // ==========================================
   // LOGIN SCREEN
   // ==========================================
@@ -627,329 +655,195 @@ function App() {
   // ==========================================
 
   return (
-    <div style={styles.page}>
-
-      <div style={styles.container}>
-
-        <div style={styles.header}>
-
-          <h1 style={styles.pageTitle}>
-            Product Management
-          </h1>
-
-          <div style={styles.userBar}>
-            <span style={styles.userText}>
-              Welcome, {user.username}
-            </span>
-
-            <button
-              onClick={logout}
-              style={styles.logoutButton}
-            >
-              Logout
-            </button>
+    <div className="inventory-app">
+      <aside className="app-sidebar">
+        <a className="brand" href="#dashboard" aria-label="Kanto Store dashboard">
+          <span className="brand-mark">K</span>
+          <span className="brand-copy"><strong>KANTO</strong><span>SARI-SARI STORE</span></span>
+        </a>
+        <div className="sidebar-label">TINDAHAN DESK</div>
+        <nav className="sidebar-nav" aria-label="Store navigation">
+          <a className="sidebar-link" href="#dashboard"><span className="sidebar-link-icon">⌂</span>Storefront</a>
+          <a className="sidebar-link is-current" href="#inventory-list"><span className="sidebar-link-icon">▤</span>Stock list<span className="sidebar-count">{products.length}</span></a>
+        </nav>
+        <div className="sidebar-bottom">
+          <div className="store-status"><span className="live-dot" /><span><strong>Tindahan open</strong><small>Stock list is up to date</small></span></div>
+          <div className="sidebar-account">
+            <span className="account-avatar">{user.username?.charAt(0).toUpperCase() || "U"}</span>
+            <span className="sidebar-user-copy"><small>Signed in as</small><strong>{user.username}</strong></span>
           </div>
-
+          <button className="sidebar-logout" onClick={logout}>Log out <span aria-hidden="true">↗</span></button>
         </div>
+      </aside>
 
-        <div style={styles.banner}>
-          Welcome, {user.username}!
-        </div>
+      <div className="workspace">
+        <header className="workspace-topbar">
+          <div className="workspace-crumb"><span>KANTO STORE</span><i>/</i> DAILY STOCK</div>
+          <div className="workspace-date"><span className="live-dot" /> STORE OPEN <i /> DAILY STOCK</div>
+        </header>
 
-        {/* =====================================
-            MESSAGE
-        ====================================== */}
+        <main className="inventory-main" id="dashboard">
+        <section className="store-banner" aria-label="Kanto Store daily stock overview">
+          <div className="banner-shade" />
+          <div className="banner-copy">
+            <span className="eyebrow eyebrow-light">NEIGHBORHOOD STORE / DAILY STOCK</span>
+            <h1>Tindahan inventory<span>.</span></h1>
+            <p>Paninda, bilang, at presyong laging updated.</p>
+          </div>
+          <div className="banner-index"><span>KANTO STORE</span><strong>01</strong><span>DAILY LIST</span></div>
+        </section>
+
+        <section className="stats-grid" aria-label="Inventory summary">
+          <article className="stat-card stat-card-primary">
+            <span className="stat-label">CATALOGUE ITEMS</span>
+            <strong className="stat-value">{products.length.toLocaleString()}</strong>
+            <span className="stat-foot">Products in your catalogue</span>
+          </article>
+          <article className="stat-card">
+            <span className="stat-label">UNITS ON HAND</span>
+            <strong className="stat-value">{totalUnits.toLocaleString()}</strong>
+            <span className="stat-foot">Across all products</span>
+          </article>
+          <article className="stat-card">
+            <span className="stat-label">STOCK VALUE</span>
+            <strong className="stat-value stat-value-money">₱{inventoryValue.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+            <span className="stat-foot">Retail value on hand</span>
+          </article>
+          <article className={`stat-card ${lowStockCount ? "stat-card-alert" : ""}`}>
+            <span className="stat-label">LOW STOCK</span>
+            <strong className="stat-value">{lowStockCount.toLocaleString()}</strong>
+            <span className="stat-foot">Items with 1–5 units</span>
+          </article>
+        </section>
 
         {message && (
-          <div style={styles.message}>
-            {message}
+          <div className={`dashboard-alert ${/unable|failed|required|valid|login|not found|unauthorized/i.test(message) ? "is-error" : "is-success"}`} role="status">
+            <span className="alert-mark" aria-hidden="true">{/unable|failed|required|valid|login|not found|unauthorized/i.test(message) ? "!" : "✓"}</span>
+            <span>{message}</span>
+            <button className="alert-dismiss" onClick={() => setMessage("")} aria-label="Dismiss message">×</button>
           </div>
         )}
 
-        {/* =====================================
-            PRODUCTS HEADER
-        ====================================== */}
-
-        <div style={styles.productHeader}>
-
-          <h2 style={styles.sectionTitle}>
-            Products
-          </h2>
-
-          <div style={styles.buttonGroup}>
-
-            <button
-              onClick={() => loadProducts()}
-              style={styles.refreshButton}
-            >
-              Refresh
-            </button>
-
-            <button
-              onClick={openAddForm}
-              style={styles.addButton}
-            >
-              + Add Product
-            </button>
-
-          </div>
-
-        </div>
-
-        {/* =====================================
-            ADD / EDIT FORM
-        ====================================== */}
-
-        {showForm && (
-          <div style={styles.formCard}>
-
-            <h2 style={styles.formTitle}>
-              {editingId !== null
-                ? "Edit Product"
-                : "Add Product"}
-            </h2>
-
-            <form onSubmit={saveProduct}>
-
-              <label style={styles.label}>
-                Product Name
-              </label>
-
-              <input
-                type="text"
-                value={productName}
-                onChange={(e) =>
-                  setProductName(e.target.value)
-                }
-                placeholder="Enter product name"
-                style={styles.input}
-                required
-              />
-
-              <label style={styles.label}>
-                Description
-              </label>
-
-              <textarea
-                value={description}
-                onChange={(e) =>
-                  setDescription(e.target.value)
-                }
-                placeholder="Enter description"
-                style={styles.textarea}
-                required
-              />
-
-              <label style={styles.label}>
-                Price
-              </label>
-
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={price}
-                onChange={(e) =>
-                  setPrice(e.target.value)
-                }
-                placeholder="Enter price"
-                style={styles.input}
-                required
-              />
-
-              <label style={styles.label}>
-                Quantity
-              </label>
-
-              <input
-                type="number"
-                min="0"
-                value={quantity}
-                onChange={(e) =>
-                  setQuantity(e.target.value)
-                }
-                placeholder="Enter quantity"
-                style={styles.input}
-                required
-              />
-
-              <div style={styles.formButtons}>
-
-                <button
-                  type="submit"
-                  style={styles.saveButton}
-                >
-                  {editingId !== null
-                    ? "Update Product"
-                    : "Add Product"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={closeForm}
-                  style={styles.cancelButton}
-                >
-                  Cancel
-                </button>
-
-              </div>
-
-            </form>
-
-          </div>
-        )}
-
-        {/* =====================================
-            PRODUCTS TABLE
-        ====================================== */}
-
-        <div style={styles.tableCard}>
-
-          {loading ? (
-
-            <p style={styles.loading}>
-              Loading products...
-            </p>
-
-          ) : products.length === 0 ? (
-
-            <p style={styles.empty}>
-              No products found.
-            </p>
-
-          ) : (
-
-            <div style={styles.tableWrapper}>
-
-              <table style={styles.table}>
-
-                <thead>
-
-                  <tr>
-
-                    <th style={styles.th}>
-                      ID
-                    </th>
-
-                    <th style={styles.th}>
-                      Product Name
-                    </th>
-
-                    <th style={styles.th}>
-                      Description
-                    </th>
-
-                    <th style={styles.th}>
-                      Price
-                    </th>
-
-                    <th style={styles.th}>
-                      Quantity
-                    </th>
-
-                    <th style={styles.th}>
-                      Created
-                    </th>
-
-                    <th style={styles.th}>
-                      Actions
-                    </th>
-
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                  {products.map((product) => (
-
-                    <tr key={product.id}>
-
-                      <td style={styles.td}>
-                        {product.id}
-                      </td>
-
-                      <td style={styles.td}>
-                        {product.product_name}
-                      </td>
-
-                      <td style={styles.td}>
-                        {product.description}
-                      </td>
-
-                      <td style={styles.td}>
-                        ₱
-                        {Number(
-                          product.price
-                        ).toLocaleString(
-                          "en-PH",
-                          {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }
-                        )}
-                      </td>
-
-                      <td style={styles.td}>
-                        {product.quantity}
-                      </td>
-
-                      <td style={styles.td}>
-                        {product.created_at}
-                      </td>
-
-                      <td style={styles.td}>
-
-                          <div
-                            style={
-                              styles.actionButtons
-                            }
-                          >
-
-                            <button
-                              onClick={() =>
-                                openEditForm(product)
-                              }
-                              style={
-                                styles.editButton
-                              }
-                            >
-                              Edit
-                            </button>
-
-                            <button
-                              onClick={() =>
-                                deleteProduct(
-                                  product.id
-                                )
-                              }
-                              style={
-                                styles.deleteButton
-                              }
-                            >
-                              Delete
-                            </button>
-
-                          </div>
-
-                      </td>
-
-                    </tr>
-
-                  ))}
-
-                </tbody>
-
-              </table>
-
+        <section className="products-section" id="inventory-list" aria-labelledby="products-heading">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">PRODUCT DIRECTORY</span>
+              <h2 id="products-heading">Your inventory<span className="heading-period">.</span></h2>
             </div>
+            <div className="section-actions">
+              <button className="refresh-action" onClick={() => loadProducts()} disabled={loading}>
+                <span aria-hidden="true">↻</span> {loading ? "Refreshing" : "Refresh"}
+              </button>
+              <button className="add-action" onClick={openAddForm}><span aria-hidden="true">＋</span> Add product</button>
+            </div>
+          </div>
 
-          )}
+          <div className="inventory-toolbar">
+            <label className="search-box">
+              <span className="search-icon" aria-hidden="true">⌕</span>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search products or descriptions"
+                aria-label="Search products"
+              />
+              {searchQuery && <button type="button" onClick={() => setSearchQuery("")} aria-label="Clear search">×</button>}
+            </label>
+            <div className="stock-filters" role="group" aria-label="Filter products by stock status">
+              {[
+                ["all", "All items", products.length],
+                ["in-stock", "In stock", products.filter((product) => Number(product.quantity) > 5).length],
+                ["low-stock", "Low stock", lowStockCount],
+                ["out-of-stock", "Out of stock", products.filter((product) => Number(product.quantity) === 0).length],
+              ].map(([value, label, count]) => (
+                <button
+                  className={`stock-filter ${stockFilter === value ? "is-active" : ""}`}
+                  key={value}
+                  onClick={() => setStockFilter(value)}
+                  aria-pressed={stockFilter === value}
+                >
+                  {label}<span>{count}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-        </div>
+          <div className="products-table-wrap">
+            <table className="products-table">
+              <thead>
+                <tr><th>PRODUCT</th><th>UNIT PRICE</th><th>QUANTITY</th><th>STOCK STATUS</th><th>ADDED</th><th>ACTIONS</th></tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan="6" className="table-message"><span className="loading-mark" /> Loading your inventory…</td></tr>
+                ) : filteredProducts.length === 0 ? (
+                  <tr><td colSpan="6" className="table-message empty-message">
+                    <span className="empty-symbol" aria-hidden="true">□</span>
+                    <strong>{products.length === 0 ? "Nothing in the warehouse yet" : "No matching products"}</strong>
+                    <span>{products.length === 0 ? "Add your first item to start tracking inventory." : "Try a different search or stock filter."}</span>
+                    {products.length === 0 && <button className="add-action empty-add" onClick={openAddForm}>＋ Add your first product</button>}
+                  </td></tr>
+                ) : filteredProducts.map((product) => {
+                  const quantityValue = Number(product.quantity || 0);
+                  const stockStatus = quantityValue === 0
+                    ? ["out", "Out of stock"]
+                    : quantityValue <= 5
+                      ? ["low", "Low stock"]
+                      : ["in", "In stock"];
 
+                  return (
+                    <tr key={product.id}>
+                      <td>
+                        <div className="product-cell">
+                          <span className="product-avatar">{product.product_name?.charAt(0).toUpperCase() || "P"}</span>
+                          <span className="product-info"><strong>{product.product_name}</strong><span>{product.description || "No description"}</span></span>
+                        </div>
+                      </td>
+                      <td className="price-cell">₱{Number(product.price || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td><span className="quantity-cell">{quantityValue.toLocaleString()} <small>units</small></span></td>
+                      <td><span className={`stock-badge stock-${stockStatus[0]}`}><span />{stockStatus[1]}</span></td>
+                      <td className="date-cell">{product.created_at ? new Date(product.created_at).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" }) : "—"}</td>
+                      <td>
+                        <div className="row-actions">
+                          <button className="row-action edit-row-action" onClick={() => openEditForm(product)} aria-label={`Edit ${product.product_name}`} title="Edit product">Edit</button>
+                          <button className="row-action delete-row-action" onClick={() => deleteProduct(product.id)} aria-label={`Delete ${product.product_name}`} title="Delete product">Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <footer className="table-footer"><span>Showing <strong>{filteredProducts.length}</strong> of <strong>{products.length}</strong> products</span><span>KANTO STORE <i>·</i> PANINDA</span></footer>
+        </section>
+        </main>
       </div>
 
+      {showForm && (
+        <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && closeForm()}>
+          <section className="product-modal" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+            <div className="modal-heading">
+              <div><span className="eyebrow">INVENTORY ENTRY</span><h2 id="product-modal-title">{editingId !== null ? "Edit product" : "Add a product"}<span className="heading-period">.</span></h2></div>
+              <button className="modal-close" onClick={closeForm} aria-label="Close form">×</button>
+            </div>
+            <p className="modal-intro">Keep your catalogue current with clear product and stock details.</p>
+            <form className="product-form" onSubmit={saveProduct}>
+              <label>Product name<input type="text" value={productName} onChange={(event) => setProductName(event.target.value)} placeholder="e.g. Shipping carton, medium" maxLength="100" required /></label>
+              <label>Description<textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Add a short product description" rows="3" required /></label>
+              <div className="form-row">
+                <label>Unit price <span className="field-prefix">₱</span><input className="prefixed-input" type="number" step="0.01" min="0" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="0.00" required /></label>
+                <label>Quantity<input type="number" min="0" value={quantity} onChange={(event) => setQuantity(event.target.value)} placeholder="0" required /></label>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="modal-cancel" onClick={closeForm}>Cancel</button>
+                <button type="submit" className="add-action modal-submit">{editingId !== null ? "Save changes" : "Add product"}</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
