@@ -530,17 +530,33 @@ function App() {
 
   if (!user) {
     return (
-      <div style={styles.loginPage}>
+      <div className="auth-page">
+        <section className="auth-showcase" aria-label="Kanto Store">
+          <a className="auth-brand" href="#auth" aria-label="Kanto Store home">
+            <span className="auth-brand-mark">K</span>
+            <span><strong>KANTO</strong><small>SARI-SARI STORE</small></span>
+          </a>
+          <div className="auth-showcase-copy">
+            <span className="auth-overline">MUNTING TINDAHAN, ARAW-ARAW NA KASAMA</span>
+            <h1>Malapit.<br />Maaasahan.<br /><em>Laging bukas.</em></h1>
+            <p>Ayos na talaan ng paninda para sa takbo ng iyong tindahan.</p>
+          </div>
+          <span className="auth-showcase-foot">KANTO STORE <i>·</i> YOUR NEIGHBORHOOD SUKI</span>
+        </section>
 
-        <div style={styles.loginCard}>
-
-          <h1 style={styles.loginTitle}>
-            {authMode === "login" ? "Login" : "Register"}
-          </h1>
+        <section className="auth-panel" id="auth">
+          <div className="auth-card">
+            <div className="auth-mobile-brand">
+              <span className="auth-brand-mark">K</span>
+              <span><strong>KANTO</strong><small>SARI-SARI STORE</small></span>
+            </div>
+            <span className="auth-overline auth-form-overline">{authMode === "login" ? "STORE MANAGEMENT" : "JOIN THE STORE"}</span>
+            <h2 className="auth-title">{authMode === "login" ? "Welcome back" : "Create account"}<span>.</span></h2>
+            <p className="auth-subtitle">{authMode === "login" ? "Mag-sign in para ma-check ang iyong paninda." : "Gumawa ng account para mapamahalaan ang tindahan."}</p>
 
           {message && (
-            <div style={isRegistrationSuccess ? styles.flashSuccess : styles.flashError}>
-              <span style={isRegistrationSuccess ? styles.successIcon : styles.errorIcon}>
+            <div className={`auth-message ${isRegistrationSuccess ? "auth-message-success" : "auth-message-error"}`}>
+              <span className="auth-message-icon">
                 {isRegistrationSuccess ? "✓" : "×"}
               </span>
               {message}
@@ -548,14 +564,14 @@ function App() {
           )}
 
           {authMode === "login" ? (
-            <form onSubmit={login} style={styles.form}>
+            <form onSubmit={login} className="auth-form">
 
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Username"
-                style={styles.input}
+                className="auth-input"
                 required
               />
 
@@ -564,26 +580,26 @@ function App() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
-                style={styles.input}
+                className="auth-input"
                 required
               />
 
               <button
                 type="submit"
-                style={styles.primaryButton}
+                className="auth-submit"
               >
                 Sign In
               </button>
 
-              <div style={styles.switchRow}>
-                <span style={styles.switchText}>Need an account?</span>
+              <div className="auth-switch">
+                <span>Wala ka pang account?</span>
                 <button
                   type="button"
                   onClick={() => {
                     setAuthMode("register");
                     setMessage("");
                   }}
-                  style={styles.linkButton}
+                  className="auth-link"
                 >
                   Register
                 </button>
@@ -591,14 +607,14 @@ function App() {
 
             </form>
           ) : (
-            <form onSubmit={register} style={styles.form}>
+            <form onSubmit={register} className="auth-form">
 
               <input
                 type="text"
                 value={registerUsername}
                 onChange={(e) => setRegisterUsername(e.target.value)}
                 placeholder="Username"
-                style={styles.input}
+                className="auth-input"
                 required
               />
 
@@ -607,7 +623,7 @@ function App() {
                 value={registerEmail}
                 onChange={(e) => setRegisterEmail(e.target.value)}
                 placeholder="Email"
-                style={styles.input}
+                className="auth-input"
                 required
               />
 
@@ -616,26 +632,26 @@ function App() {
                 value={registerPassword}
                 onChange={(e) => setRegisterPassword(e.target.value)}
                 placeholder="Password"
-                style={styles.input}
+                className="auth-input"
                 required
               />
 
               <button
                 type="submit"
-                style={styles.primaryButton}
+                className="auth-submit"
               >
                 Register
               </button>
 
-              <div style={styles.switchRow}>
-                <span style={styles.switchText}>Already have an account?</span>
+              <div className="auth-switch">
+                <span>May account ka na?</span>
                 <button
                   type="button"
                   onClick={() => {
                     setAuthMode("login");
                     setMessage("");
                   }}
-                  style={styles.linkButton}
+                  className="auth-link"
                 >
                   Login
                 </button>
@@ -644,8 +660,9 @@ function App() {
             </form>
           )}
 
-        </div>
-
+            <div className="auth-card-foot"><span className="auth-foot-dot" /> STOCKS IN ORDER, SUKI IN MIND</div>
+          </div>
+        </section>
       </div>
     );
   }
