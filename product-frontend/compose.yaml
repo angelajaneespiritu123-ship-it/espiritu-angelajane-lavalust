@@ -1,0 +1,6 @@
+services:
+  productfrontend:
+    image: productfrontend
+    build:
+      context: .
+      dockerfile: ./Dockerfile

@@ -33,13 +33,18 @@ $router->delete('/api/products/{id}', 'ApiProductController::delete')->where_num
 // CORS preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    $allowedOrigins = array_values(array_filter(array_map(
+        'trim',
+        explode(',', getenv('FRONTEND_ORIGINS') ?: 'http://localhost:5173')
+    )));
 
-    if ($origin === 'http://localhost:5173') {
-        header('Access-Control-Allow-Origin: http://localhost:5173');
+    if (in_array($origin, $allowedOrigins, true)) {
+        header("Access-Control-Allow-Origin: {$origin}");
         header('Access-Control-Allow-Credentials: true');
         header('Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With, X-RateLimit-*');
         header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS');
         header('Access-Control-Max-Age: 3600');
+        header('Vary: Origin');
         http_response_code(204);
         exit;
     }

@@ -75,7 +75,12 @@ $config['refresh_token_expiration'] = 604800;
 | Used for Securing endpoint
 |
 */
-$config['jwt_secret'] = getenv('JWT_SECRET') ?: '';
+$app_key = getenv('APP_KEY') ?: '';
+$use_local_key_fallback = (getenv('APP_ENV') ?: 'development') === 'development'
+	&& strlen($app_key) >= 32;
+$config['jwt_secret'] = getenv('JWT_SECRET') ?: (
+	$use_local_key_fallback ? hash_hmac('sha256', 'lavalust-jwt-signing', $app_key) : ''
+);
 
 /*
 |--------------------------------------------------------------------------
@@ -85,7 +90,9 @@ $config['jwt_secret'] = getenv('JWT_SECRET') ?: '';
 | Used for Securing endpoint
 |
 */
-$config['refresh_token_key'] = getenv('REFRESH_TOKEN_KEY') ?: '';
+$config['refresh_token_key'] = getenv('REFRESH_TOKEN_KEY') ?: (
+	$use_local_key_fallback ? hash_hmac('sha256', 'lavalust-refresh-token', $app_key) : ''
+);
 
 /*
 |--------------------------------------------------------------------------
@@ -96,7 +103,8 @@ $config['refresh_token_key'] = getenv('REFRESH_TOKEN_KEY') ?: '';
 | already deployed.
 |
 */
-$config['allow_origin'] = 'http://localhost:5173';
+$allowed_origins = getenv('FRONTEND_ORIGINS') ?: 'http://localhost:5173';
+$config['allow_origin'] = array_values(array_filter(array_map('trim', explode(',', $allowed_origins))));
 
 /*
 |--------------------------------------------------------------------------
