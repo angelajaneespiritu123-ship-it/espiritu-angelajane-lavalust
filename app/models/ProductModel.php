@@ -6,4 +6,9 @@ class ProductModel extends Model
 {
     protected $table = 'products';
     protected $primary_key = 'id';
+
+    public function get_all_products()
+    {
+        return $this->db->table($this->table)->get();
+    }
 }
